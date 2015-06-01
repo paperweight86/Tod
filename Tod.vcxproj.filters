@@ -12,20 +12,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="2DRendererFactory.cpp" />
-    <ClCompile Include="D2D1Renderer.cpp" />
-    <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="..\Shared\Logger.cpp">
       <Filter>Logger</Filter>
     </ClCompile>
     <ClCompile Include="..\Shared\ScopedLog.cpp">
       <Filter>Logger</Filter>
     </ClCompile>
+    <ClCompile Include="src\2DRendererFactory.cpp" />
+    <ClCompile Include="src\D2D1Renderer.cpp" />
+    <ClCompile Include="src\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D2D1Renderer.h" />
-    <ClInclude Include="VertexFormat.h" />
-    <ClInclude Include="stdafx.h" />
     <ClInclude Include="..\..\inc\tod\2DRendererFactory.h">
       <Filter>inc\tod</Filter>
     </ClInclude>
@@ -47,5 +44,8 @@
     <ClInclude Include="..\Shared\ScopedLog.h">
       <Filter>Logger</Filter>
     </ClInclude>
+    <ClInclude Include="src\D2D1Renderer.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\VertexFormat.h" />
   </ItemGroup>
 </Project>

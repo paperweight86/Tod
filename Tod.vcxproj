@@ -21,9 +21,9 @@
   <ItemGroup>
     <ClCompile Include="..\Shared\Logger.cpp" />
     <ClCompile Include="..\Shared\ScopedLog.cpp" />
-    <ClCompile Include="2DRendererFactory.cpp" />
-    <ClCompile Include="D2D1Renderer.cpp" />
-    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="src\2DRendererFactory.cpp" />
+    <ClCompile Include="src\D2D1Renderer.cpp" />
+    <ClCompile Include="src\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\HRTools.h" />
@@ -33,9 +33,9 @@
     <ClInclude Include="..\..\inc\tod\Rect.h" />
     <ClInclude Include="..\Shared\Logger.h" />
     <ClInclude Include="..\Shared\ScopedLog.h" />
-    <ClInclude Include="D2D1Renderer.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="VertexFormat.h" />
+    <ClInclude Include="src\D2D1Renderer.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\VertexFormat.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0C936E33-BC5C-42CA-80B0-E5280E2C1967}</ProjectGuid>
@@ -97,6 +97,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\shared;inc;src;.\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -107,7 +108,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\shared;..\..\inc;..\..\inc\tod;.\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\shared;inc;src;.\</AdditionalIncludeDirectories>
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <Link>
@@ -125,6 +126,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\shared;inc;src;.\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -140,7 +142,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>..\Shared;..\..\inc;..\..\inc\tod;.\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\shared;inc;src;.\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
