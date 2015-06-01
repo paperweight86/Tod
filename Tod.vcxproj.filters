@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Logger">
+      <UniqueIdentifier>{7ff89a84-ada4-4a15-8e26-57a7c1291deb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc">
+      <UniqueIdentifier>{32dc9a44-ff8b-4da4-a806-2041dd0aae64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\tod">
+      <UniqueIdentifier>{96e42b7d-36f2-410d-bdc1-30e210d44369}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="2DRendererFactory.cpp" />
+    <ClCompile Include="D2D1Renderer.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="..\Shared\Logger.cpp">
+      <Filter>Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Shared\ScopedLog.cpp">
+      <Filter>Logger</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D2D1Renderer.h" />
+    <ClInclude Include="VertexFormat.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="..\..\inc\tod\2DRendererFactory.h">
+      <Filter>inc\tod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\tod\Colour.h">
+      <Filter>inc\tod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\tod\I2DRenderer.h">
+      <Filter>inc\tod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\tod\Rect.h">
+      <Filter>inc\tod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\HRTools.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\Logger.h">
+      <Filter>Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Shared\ScopedLog.h">
+      <Filter>Logger</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
