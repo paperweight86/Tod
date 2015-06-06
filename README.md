@@ -1,3 +1,3 @@
 # Tod
-2D Rendering Library
-TODO: Fix compilcation!
+# 2D Rendering Library
+Wraps Direct2D calls at the moment intended to allow OpenGL implementation later for linux et but might be a separate library we'll see...
