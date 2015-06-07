@@ -40,6 +40,9 @@ bool CD2D1Renderer::Initialise( ptr hwnd, uint32 width, uint32 height )
 
 	m_hwnd = hwnd;
 
+	m_width = width;
+	m_height = height;
+
 	if( !CreateDeviceIndependentResources() )
 	{
 		Logger.Error(_T("Initialisation failed"));
@@ -195,18 +198,31 @@ rhandle CD2D1Renderer::CreateEllipseGeometry( const float2& pos, const float2& s
 
 rhandle CD2D1Renderer::CreateBrush( const SColour& colour )
 {
-	ComponentLogFunc( );
-	rhandle handle = nullrhandle;
+	return CreateBrushCached(colour);
+}
 
-	ID2D1SolidColorBrush* pBrush = nullptr;
-	HRESULT hr = m_pRenderTarget->CreateSolidColorBrush( D2D1::ColorF( colour.r, colour.g, colour.b, colour.a ), &pBrush );
-	CHECK_HR_ONFAIL_LOG(hr, _T("Failed to create Direct2D solid colour brush"));
-	if( SUCCEEDED(hr) )
+rhandle CD2D1Renderer::CreateBrushCached(const SColour& colour)
+{
+	ComponentLogFunc();
+	auto brushFindResult = m_mBrushCache.find(colour);
+	if (brushFindResult != m_mBrushCache.end())
 	{
-		handle = MAKE_RHANDLE( m_ui32NextBrushID++, eResourceType_SolidBrush );
-		m_mBrushes.insert( std::make_pair(handle, pBrush) );
+		return brushFindResult->second;
 	}
 	
+	Logger.Warning(_T("Brush cache miss for R %f G %f B %f A %f"), colour.r, colour.g, colour.b, colour.a);
+
+	rhandle handle = nullrhandle;
+	ID2D1SolidColorBrush* pBrush = nullptr;
+	HRESULT hr = m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(colour.r, colour.g, colour.b, colour.a), &pBrush);
+	CHECK_HR_ONFAIL_LOG(hr, _T("Failed to create Direct2D solid colour brush"));
+	if (SUCCEEDED(hr))
+	{
+		handle = MAKE_RHANDLE(m_ui32NextBrushID++, eResourceType_SolidBrush);
+		m_mBrushes.insert(std::make_pair(handle, pBrush));
+		m_mBrushCache.insert(std::make_pair(colour, handle));
+	}
+
 	return handle;
 }
 
@@ -298,6 +314,18 @@ void CD2D1Renderer::DrawBitmap(rhandle hBitmap, float2 pos, float2 scale, float 
 	D2D1_RECT_F rect = D2D1::RectF(pos.x, pos.y, pos.x + size.width*scale.x, pos.y + size.height*scale.y);
 	D2D1_RECT_F srcRect = D2D1::RectF(0.0f, 0.0f, size.width, size.height);
 	m_pRenderTarget->DrawBitmap(bmpIterFound->second, rect, opacity, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, srcRect);
+}
+
+void CD2D1Renderer::DrawRectangle(rhandle hBrush, SRect rect, float2 offset, float2 scale, float stroke)
+{
+	auto brushFound = m_mBrushes.find(hBrush);
+	assert(brushFound != m_mBrushes.end());
+	auto size = m_pRenderTarget->GetSize();
+	float right = size.width - rect.x - rect.w*scale.x;
+	float bottom = size.height - rect.y - rect.h*scale.y;
+	//D2D1_RECT_F d2dRect = D2D1::RectF(rect.x + offset.x, rect.y + offset.y, right, bottom);
+	D2D1_RECT_F d2dRect = D2D1::RectF(rect.x, rect.y, rect.x+rect.w, rect.y+rect.h);
+	m_pRenderTarget->FillRectangle(d2dRect, brushFound->second);
 }
 
 // Private

@@ -32,6 +32,7 @@ namespace tod
 		std::map<rhandle,ID2D1Geometry*> m_mGeometry;
 		uint32 m_ui32NextGeometryID;
 		std::map<rhandle,ID2D1Brush*> m_mBrushes;
+		std::map<SColour, rhandle> m_mBrushCache;
 		uint32 m_ui32NextBrushID;
 //		std::map<int128,rhandle> m_mBrushColours;
 
@@ -40,6 +41,9 @@ namespace tod
 
 		IDWriteFactory* m_pDWriteFactory;
 		IDWriteTextFormat* m_pTextFormat;
+
+		uint32 m_width;
+		uint32 m_height;
 
 	public:
 		CD2D1Renderer( );
@@ -59,6 +63,7 @@ namespace tod
 		virtual rhandle CreateEllipseGeometry( const float2& pos, const float2& size );
 
 		virtual rhandle CreateBrush( const SColour& colour );
+		virtual rhandle CreateBrushCached(const SColour& colour);
 		
 		virtual rhandle CreateImage(uint16 width, uint16 height, uint8* data);
 		virtual void    UpdateImage(rhandle img, uint16 width, uint16 height, uint8* data);
@@ -70,6 +75,8 @@ namespace tod
 
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale );
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale, float opacity );
+
+		virtual void DrawRectangle( rhandle hBrush, SRect rect, float2 offset = float2(0.0f, 0.0f), float2 scale = float2(1.0f, 1.0f), float stroke = 0.0f );
 	private:
 		bool CreateDeviceIndependentResources();
 		bool CreateDeviceResources();

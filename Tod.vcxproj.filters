@@ -1,51 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Logger">
-      <UniqueIdentifier>{7ff89a84-ada4-4a15-8e26-57a7c1291deb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="inc">
       <UniqueIdentifier>{32dc9a44-ff8b-4da4-a806-2041dd0aae64}</UniqueIdentifier>
     </Filter>
-    <Filter Include="inc\tod">
-      <UniqueIdentifier>{96e42b7d-36f2-410d-bdc1-30e210d44369}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Shared\Logger.cpp">
-      <Filter>Logger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Shared\ScopedLog.cpp">
-      <Filter>Logger</Filter>
-    </ClCompile>
     <ClCompile Include="src\2DRendererFactory.cpp" />
     <ClCompile Include="src\D2D1Renderer.cpp" />
     <ClCompile Include="src\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\inc\tod\2DRendererFactory.h">
-      <Filter>inc\tod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\tod\Colour.h">
-      <Filter>inc\tod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\tod\I2DRenderer.h">
-      <Filter>inc\tod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\tod\Rect.h">
-      <Filter>inc\tod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\HRTools.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Shared\Logger.h">
-      <Filter>Logger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Shared\ScopedLog.h">
-      <Filter>Logger</Filter>
-    </ClInclude>
     <ClInclude Include="src\D2D1Renderer.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\VertexFormat.h" />
+    <ClInclude Include="inc\2DRendererFactory.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\2DRenderers.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Colour.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\I2DRenderer.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Rect.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
   </ItemGroup>
 </Project>

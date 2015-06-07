@@ -55,5 +55,7 @@ namespace tod
 
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale ) = 0;
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale, float opacity ) = 0;
+
+		virtual void DrawRectangle(rhandle hBrush, SRect rect, float2 offset = float2(0.0f, 0.0f), float2 scale = float2(1.0f, 1.0f), float stroke = 0.0f) = 0;
 	};
 }
