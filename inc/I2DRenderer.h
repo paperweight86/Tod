@@ -51,7 +51,7 @@ namespace tod
 		virtual void DrawGeometry( rhandle hGeometry, rhandle hBrush ) = 0;
 		virtual void DrawFillGeometry( rhandle hGeometry, rhandle hBrush ) = 0;
 		virtual void DrawFillGeometry( rhandle hGeometry, rhandle hBrush, float2 translation ) = 0;
-		virtual void DrawTextString( wstr string ) = 0;
+		virtual void DrawTextString(wstr string, SRect rect) = 0;
 
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale ) = 0;
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale, float opacity ) = 0;

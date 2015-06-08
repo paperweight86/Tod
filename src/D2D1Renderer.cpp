@@ -295,10 +295,10 @@ void CD2D1Renderer::DrawFillGeometry( rhandle hGeometry, rhandle hBrush, float2 
 	m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 }
 
-void CD2D1Renderer::DrawTextString( wstr string )
+void CD2D1Renderer::DrawTextString( wstr string, SRect rect )
 {
-	D2D1_RECT_F rect = D2D1::RectF(50,50,100,100);
-	m_pRenderTarget->DrawTextW( string, lstrlenW(string), m_pTextFormat, rect, m_pBlackBrush );
+	D2D1_RECT_F d2d1Rect = D2D1::RectF(rect.x, rect.y, rect.x+rect.w, rect.y+rect.h);
+	m_pRenderTarget->DrawTextW(string, lstrlenW(string), m_pTextFormat, d2d1Rect, m_pBlackBrush);
 }
 
 void CD2D1Renderer::DrawBitmap(rhandle hBitmap, float2 pos, float2 scale)
