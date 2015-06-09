@@ -5,6 +5,7 @@
 
 #include <list>
 #include <map>
+#include <unordered_map>
 
 struct ID2D1Factory;
 struct ID2D1HwndRenderTarget;
@@ -18,6 +19,19 @@ struct ID2D1Bitmap;
 
 namespace tod
 {
+	struct SColourHasher 
+	{
+		size_t operator()(const SColour& col) const 
+		{
+
+			return ((((  std::hash<float>()(col.r)
+					^ (std::hash<float>()(col.g) << 1)) >> 1)
+				    ^ (std::hash<float>()(col.b) << 1)) >> 1)
+					^ (std::hash<float>()(col.a) << 1);
+		}
+	};
+
+
 	class CD2D1Renderer : public I2DRenderer
 	{
 	private:
@@ -32,7 +46,7 @@ namespace tod
 		std::map<rhandle,ID2D1Geometry*> m_mGeometry;
 		uint32 m_ui32NextGeometryID;
 		std::map<rhandle,ID2D1Brush*> m_mBrushes;
-		std::map<SColour, rhandle> m_mBrushCache;
+		std::unordered_map<SColour, rhandle, SColourHasher> m_mBrushCache;
 		uint32 m_ui32NextBrushID;
 //		std::map<int128,rhandle> m_mBrushColours;
 

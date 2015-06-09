@@ -16,44 +16,6 @@ namespace tod
 				&& b == other.b
 				&& a == other.a;
 		}
-
-		bool const operator<(const SColour &other) const
-		{
-			if (r < other.r && g < other.g && b < other.b && a < other.a)
-				return true;
-
-			if (r == other.r && g < other.g && b < other.b && a < other.a)
-				return true;
-
-			if (r < other.r && g == other.g && b < other.b && a < other.a)
-				return true;
-
-			if (r < other.r && g < other.g && b == other.b && a < other.a)
-				return true;
-
-			if (r < other.r && g < other.g && b < other.b && a == other.a)
-				return true;
-
-			if (r == other.r && g == other.g && b < other.b && a < other.a)
-				return true;
-
-			if (r == other.r && g == other.g && b == other.b && a < other.a)
-				return true;
-
-			if (r < other.r && g < other.g && b == other.b && a == other.a)
-				return true;
-
-			if (r == other.r && g < other.g && b < other.b && a == other.a)
-				return true;
-
-			if (r < other.r && g == other.g && b < other.b && a == other.a)
-				return true;
-
-			if (r == other.r && g < other.g && b == other.b && a < other.a)
-				return true;
-
-			return false;
-		}
 	};
 
 	inline void CreateColourFromRGB( SColour& col, uint32 rgba )
