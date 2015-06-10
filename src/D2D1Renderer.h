@@ -48,7 +48,6 @@ namespace tod
 		std::map<rhandle,ID2D1Brush*> m_mBrushes;
 		std::unordered_map<SColour, rhandle, SColourHasher> m_mBrushCache;
 		uint32 m_ui32NextBrushID;
-//		std::map<int128,rhandle> m_mBrushColours;
 
 		std::map<rhandle, ID2D1Bitmap*> m_mBitmaps;
 		uint32 m_uiNextBitmapId;
