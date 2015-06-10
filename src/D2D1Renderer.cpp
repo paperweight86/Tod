@@ -125,7 +125,7 @@ rhandle CD2D1Renderer::CreateFillGeometry( const float2* vertices, uint32 vertex
 	rhandle handle = nullrhandle;
 
 	ID2D1PathGeometry* pNewGeo = nullptr;
-
+	
 	HRESULT hr = m_pDirect2dFactory->CreatePathGeometry( &pNewGeo );
 	CHECK_HR_ONFAIL_LOG(hr, _T("Failed to create Direct2D path geometry"));
 	if( SUCCEEDED(hr) )
@@ -134,7 +134,7 @@ rhandle CD2D1Renderer::CreateFillGeometry( const float2* vertices, uint32 vertex
 		hr = pNewGeo->Open(&pSink);
 		CHECK_HR_ONFAIL_LOG_RETURN_VAL( hr, _T("Failed to create Direct2D path geometry"), nullrhandle);
 		pSink->SetFillMode(D2D1_FILL_MODE_WINDING);
-		pSink->BeginFigure( D2D1::Point2F( vertices[vertexCount-1].x, vertices[vertexCount-1].y ), D2D1_FIGURE_BEGIN_FILLED );
+		pSink->BeginFigure( D2D1::Point2F( vertices[0].x, vertices[0].y ), D2D1_FIGURE_BEGIN_FILLED );
 		for(uint32 i = 0; i < vertexCount; ++i)
 		{
 			pSink->AddLine(D2D1::Point2F( vertices[i].x, vertices[i].y ));
@@ -406,6 +406,46 @@ void CD2D1Renderer::DestroyDeviceResources()
 	D2D_RELEASE(m_pMidGrayBrush);
 	
 	D2D_RELEASE(m_pRenderTarget);
+}
+
+void CD2D1Renderer::DestroyResource(rhandle hResource)
+{
+	EResourceType resourceType = (EResourceType)GET_RHANDLE_TYPE(hResource);
+	switch (resourceType)
+	{
+	case eResourceType_EllipseGeometry:
+	case eResourceType_RectangleGeometry:
+	case eResourceType_PathGeometry:
+	case eResourceType_ShapeGeometry:
+	{
+		auto geoFind = m_mGeometry.find(hResource);
+		geoFind->second->Release();
+		m_mGeometry.erase(geoFind);
+		break;
+	}
+	case eResourceType_SolidBrush:
+	{
+		auto brushFind = m_mBrushes.find(hResource);
+		brushFind->second->Release();
+		m_mBrushes.erase(brushFind);
+		// TODO: remove from cache!
+		break;
+	}
+	case eResourceType_TextFormat:
+	{
+		// TODO?!?!!
+		break;
+	}
+	case eResourceType_Bitmap:
+	{
+		auto bmpFind = m_mBitmaps.find(hResource);
+		bmpFind->second->Release();
+		m_mBitmaps.erase(bmpFind);
+		break;
+	}
+	default:
+		break;
+	}
 }
 
 }
