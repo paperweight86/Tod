@@ -52,7 +52,7 @@ namespace tod
 		std::map<rhandle, ID2D1Bitmap*> m_mBitmaps;
 		uint32 m_uiNextBitmapId;
 
-		IDWriteFactory* m_pDWriteFactory;
+		IDWriteFactory*	   m_pDWriteFactory;
 		IDWriteTextFormat* m_pTextFormat;
 
 		uint32 m_width;

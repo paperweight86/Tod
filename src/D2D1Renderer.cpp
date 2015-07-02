@@ -26,11 +26,7 @@ CD2D1Renderer::CD2D1Renderer( ) :
 
 CD2D1Renderer::~CD2D1Renderer( )
 {
-	D2D_RELEASE(m_pD2D1Rect);
-	D2D_RELEASE(m_pBlackBrush);
-	
-	D2D_RELEASE(m_pRenderTarget);
-	D2D_RELEASE(m_pDirect2dFactory);
+	DestroyDeviceResources();
 }
 
 // IUIRenderer
@@ -376,11 +372,14 @@ bool CD2D1Renderer::CreateDeviceResources( )
 		RECT rc;
 		GetClientRect((HWND)m_hwnd, &rc);
 		D2D1_SIZE_U size = D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top);
-		hr = this->m_pDirect2dFactory->CreateHwndRenderTarget(
+		hr = m_pDirect2dFactory->CreateHwndRenderTarget(
 			D2D1::RenderTargetProperties(),
 			D2D1::HwndRenderTargetProperties((HWND)m_hwnd, size),
 			&m_pRenderTarget
 			);
+
+		
+		//m_pDirect2dFactory->CreateWicBitmapRenderTarget()
 
 		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D render target"));
 
@@ -401,11 +400,21 @@ bool CD2D1Renderer::CreateDeviceResources( )
 
 void CD2D1Renderer::DestroyDeviceResources()
 {
+	//std::for_each(m_mBitmaps.begin(), m_mBitmaps.end(), [](std::pair<rhandle, IUnknownPtr> kv) { D2D_RELEASE(kv.second); });
+	D2D_RELEASE_ALL_MAP(m_mBitmaps);
+	m_mBrushCache.clear();
+	D2D_RELEASE_ALL_MAP(m_mBrushes);
+	D2D_RELEASE_ALL_MAP(m_mGeometry);
+
 	D2D_RELEASE(m_pD2D1Rect);
 	D2D_RELEASE(m_pBlackBrush);
 	D2D_RELEASE(m_pMidGrayBrush);
-	
+
+	D2D_RELEASE(m_pTextFormat);
+	D2D_RELEASE(m_pDWriteFactory);
+
 	D2D_RELEASE(m_pRenderTarget);
+	D2D_RELEASE(m_pDirect2dFactory);
 }
 
 void CD2D1Renderer::DestroyResource(rhandle hResource)
@@ -419,21 +428,28 @@ void CD2D1Renderer::DestroyResource(rhandle hResource)
 	case eResourceType_ShapeGeometry:
 	{
 		auto geoFind = m_mGeometry.find(hResource);
-		geoFind->second->Release();
+		D2D_RELEASE(geoFind->second);
 		m_mGeometry.erase(geoFind);
 		break;
 	}
 	case eResourceType_SolidBrush:
 	{
+		// Remove from brushes cache
+		auto brushReverseSearch = [hResource](std::pair<SColour, rhandle> kv) -> bool { return kv.second == hResource; };
+		auto cacheResult = std::find_if(m_mBrushCache.begin(), m_mBrushCache.end(), brushReverseSearch);
+		if (cacheResult != m_mBrushCache.end())
+			m_mBrushCache.erase(cacheResult);
+
+		// Remove and free from main brushes list
 		auto brushFind = m_mBrushes.find(hResource);
-		brushFind->second->Release();
+		D2D_RELEASE(brushFind->second);
 		m_mBrushes.erase(brushFind);
-		// TODO: remove from cache!
+
 		break;
 	}
 	case eResourceType_TextFormat:
 	{
-		// TODO?!?!!
+		// TODO: When we create text resources
 		break;
 	}
 	case eResourceType_Bitmap:
