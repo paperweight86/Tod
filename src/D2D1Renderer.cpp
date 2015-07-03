@@ -3,6 +3,7 @@
 
 #include <d2d1_1.h>
 #include <dwrite.h>
+#include <wincodec.h>
 
 #include "HRTools.h"
 
@@ -94,6 +95,12 @@ void CD2D1Renderer::EndDraw( )
 	ComponentLogFunc( );
 	HRESULT hr =  m_pRenderTarget->EndDraw();
 	CHECK_HR_ONFAIL_LOG( hr, _T("Failed to draw correctly") );
+	ID2D1Bitmap* pBmp = nullptr;
+	m_pHwndRenderTarget->CreateBitmapFromWicBitmap(m_pWicBitmap, &pBmp);
+	m_pHwndRenderTarget->BeginDraw();
+	m_pHwndRenderTarget->DrawBitmap(pBmp);
+	m_pHwndRenderTarget->EndDraw();
+	pBmp->Release();
 }
 
 rhandle CD2D1Renderer::CreateRectangleGeometry( SRect rect )
@@ -335,6 +342,13 @@ bool CD2D1Renderer::CreateDeviceIndependentResources()
 	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pDirect2dFactory);
 	CHECK_HR_ONFAIL_LOG_RETURN( hr, _T("Failed to create Direct2D factory") );
 
+	CoInitialize(nullptr);
+
+	hr = CoCreateInstance( CLSID_WICImagingFactory, nullptr,
+						   CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pWicFactory));
+
+	CHECK_HR_ONFAIL_LOG_RETURN( hr, _T("Failed to create WIC Imaging Factory") );
+
     hr = DWriteCreateFactory(
 			DWRITE_FACTORY_TYPE_SHARED,
 			__uuidof(IDWriteFactory),
@@ -375,13 +389,23 @@ bool CD2D1Renderer::CreateDeviceResources( )
 		hr = m_pDirect2dFactory->CreateHwndRenderTarget(
 			D2D1::RenderTargetProperties(),
 			D2D1::HwndRenderTargetProperties((HWND)m_hwnd, size),
-			&m_pRenderTarget
+			&m_pHwndRenderTarget
 			);
 
-		
-		//m_pDirect2dFactory->CreateWicBitmapRenderTarget()
-
 		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D render target"));
+
+		//m_pRenderTarget = m_pHwndRenderTarget;
+
+		hr = m_pWicFactory->CreateBitmap(m_width, m_height, GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnLoad, &m_pWicBitmap);
+		
+		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create WIC bitmap"));
+
+		auto rtprop = D2D1::RenderTargetProperties();
+		hr = m_pDirect2dFactory->CreateWicBitmapRenderTarget(m_pWicBitmap, &rtprop, &m_pBmpRenderTarget);
+
+		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2d WIC bitmap render target"));
+
+		m_pRenderTarget = m_pBmpRenderTarget;
 
 		D2D1_RECT_F rect = D2D1::RectF(0.0f,0.0f,50.0f,50.0f);
 		hr = m_pDirect2dFactory->CreateRectangleGeometry( rect, &m_pD2D1Rect );
@@ -393,6 +417,8 @@ bool CD2D1Renderer::CreateDeviceResources( )
 		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D black brush"));
 
 		hr = m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::LightSteelBlue), &m_pMidGrayBrush);
+
+		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D light steel blue brush"));
 	}
 
 	return true;
@@ -400,7 +426,6 @@ bool CD2D1Renderer::CreateDeviceResources( )
 
 void CD2D1Renderer::DestroyDeviceResources()
 {
-	//std::for_each(m_mBitmaps.begin(), m_mBitmaps.end(), [](std::pair<rhandle, IUnknownPtr> kv) { D2D_RELEASE(kv.second); });
 	D2D_RELEASE_ALL_MAP(m_mBitmaps);
 	m_mBrushCache.clear();
 	D2D_RELEASE_ALL_MAP(m_mBrushes);

@@ -16,6 +16,10 @@ struct ID2D1Brush;
 struct IDWriteFactory;
 struct IDWriteTextFormat;
 struct ID2D1Bitmap;
+struct IWICImagingFactory;
+struct IWICBitmap;
+struct ID2D1BitmapRenderTarget;
+struct ID2D1RenderTarget;
 
 namespace tod
 {
@@ -38,7 +42,8 @@ namespace tod
 		ptr m_hwnd;
 
 		ID2D1Factory* m_pDirect2dFactory;
-		ID2D1HwndRenderTarget* m_pRenderTarget;
+		
+		ID2D1RenderTarget* m_pRenderTarget;
 		ID2D1RectangleGeometry* m_pD2D1Rect;
 		ID2D1SolidColorBrush* m_pBlackBrush;
 		ID2D1SolidColorBrush* m_pMidGrayBrush;
@@ -54,6 +59,12 @@ namespace tod
 
 		IDWriteFactory*	   m_pDWriteFactory;
 		IDWriteTextFormat* m_pTextFormat;
+
+		IWICImagingFactory*		 m_pWicFactory;
+		IWICBitmap*				 m_pWicBitmap;
+
+		ID2D1HwndRenderTarget* m_pHwndRenderTarget;
+		ID2D1RenderTarget* m_pBmpRenderTarget;
 
 		uint32 m_width;
 		uint32 m_height;
