@@ -20,7 +20,8 @@ CD2D1Renderer::CD2D1Renderer( ) :
 	m_hwnd((ptr)nullptr),
 	m_ui32NextGeometryID(0),
 	m_ui32NextBrushID(0),
-	m_uiNextBitmapId(0)
+	m_uiNextBitmapId(0),
+	m_uiNextRenderTargetID(0)
 {
 	m_eType = e2DRenderer_Direct2D;
 }
@@ -90,17 +91,11 @@ void CD2D1Renderer::BeginDraw( )
 	m_pRenderTarget->SetTransform( D2D1::Matrix3x2F::Identity() );
 }
 
-void CD2D1Renderer::EndDraw( )
+void CD2D1Renderer::EndDraw()
 {
-	ComponentLogFunc( );
-	HRESULT hr =  m_pRenderTarget->EndDraw();
-	CHECK_HR_ONFAIL_LOG( hr, _T("Failed to draw correctly") );
-	ID2D1Bitmap* pBmp = nullptr;
-	m_pHwndRenderTarget->CreateBitmapFromWicBitmap(m_pWicBitmap, &pBmp);
-	m_pHwndRenderTarget->BeginDraw();
-	m_pHwndRenderTarget->DrawBitmap(pBmp);
-	m_pHwndRenderTarget->EndDraw();
-	pBmp->Release();
+	ComponentLogFunc();
+	HRESULT hr = m_pRenderTarget->EndDraw();
+	CHECK_HR_ONFAIL_LOG(hr, _T("Failed to draw correctly"));
 }
 
 rhandle CD2D1Renderer::CreateRectangleGeometry( SRect rect )
@@ -260,6 +255,38 @@ rhandle CD2D1Renderer::CreateImage(uint16 width, uint16 height, uint8* data)
 	return handle;
 }
 
+rhandle CD2D1Renderer::CreateImageFromRenderTarget(rhandle hRenderTarget)
+{
+	auto foundRt = m_mRenderTargets.find(hRenderTarget);
+	if (foundRt == m_mRenderTargets.end())
+	{
+		Logger.Log(_T("Unable to create image from render target - no such render target %016x", hRenderTarget));
+		return nullrhandle;
+	}
+
+	auto foundWic = m_mRenderTargetWicBmps.find(hRenderTarget);
+	if (foundWic == m_mRenderTargetWicBmps.end())
+	{
+		Logger.Log(_T("Unable to create image from render target - render target %016x has no associated bitmap", hRenderTarget));
+		return nullrhandle;
+	}
+
+	rhandle handle = MAKE_RHANDLE(uint32_max, eResourceType_Bitmap);
+
+	auto foundBmp = m_mBitmaps.find(handle);
+	if (foundBmp != m_mBitmaps.end())
+	{
+		foundBmp->second->Release();
+		m_mBitmaps.erase(foundBmp);
+	}
+
+	ID2D1Bitmap* pBmp = nullptr;
+	m_pRenderTarget->CreateBitmapFromWicBitmap(foundWic->second, &pBmp);
+	m_mBitmaps.insert(std::make_pair(handle, pBmp));
+
+	return handle;
+}
+
 void CD2D1Renderer::UpdateImage(rhandle img, uint16 width, uint16 height, uint8* data)
 {
 	auto pBmp  = m_mBitmaps[img];
@@ -271,6 +298,62 @@ void CD2D1Renderer::UpdateImage(rhandle img, uint16 width, uint16 height, uint8*
 	}
 }
 
+rhandle CD2D1Renderer::CreateRenderTarget(bool present)
+{
+	ComponentLogFunc();
+	rhandle resource = nullrhandle;
+	HRESULT hr = 0;
+	resource = MAKE_RHANDLE(m_uiNextRenderTargetID++, eResourceType_RenderTarget);
+	if (present)
+	{
+		// Create an HwndRenderTarget to draw to the hwnd.
+		RECT rc;
+		GetClientRect((HWND)m_hwnd, &rc);
+		ID2D1HwndRenderTarget* pHwndRt = nullptr;
+		D2D1_SIZE_U size = D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top);
+		hr = m_pDirect2dFactory->CreateHwndRenderTarget(
+			D2D1::RenderTargetProperties(),
+			D2D1::HwndRenderTargetProperties((HWND)m_hwnd, size),
+			&pHwndRt
+			);
+
+		CHECK_HR_ONFAIL_LOG_RETURN_VAL(hr, _T("Failed to create Direct2D render target"), nullrhandle);
+		m_mRenderTargets.insert(std::make_pair(resource, static_cast<ID2D1RenderTarget*>(pHwndRt)));
+	}
+	else
+	{
+		IWICBitmap* pWicBmp = nullptr;
+		hr = m_pWicFactory->CreateBitmap(m_width, m_height, GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnLoad, &pWicBmp);
+
+		CHECK_HR_ONFAIL_LOG_RETURN_VAL(hr, _T("Failed to create WIC bitmap render target"), nullrhandle);
+
+		ID2D1RenderTarget* pRt = nullptr;
+		auto rtprop = D2D1::RenderTargetProperties();
+		hr = m_pDirect2dFactory->CreateWicBitmapRenderTarget(pWicBmp, &rtprop, &pRt);
+
+		CHECK_HR_ONFAIL_LOG_RETURN_VAL(hr, _T("Failed to create Direct2d WIC bitmap render target"), nullrhandle);
+
+		m_mRenderTargets.insert(std::make_pair(resource, pRt));
+		m_mRenderTargetWicBmps.insert(std::make_pair(resource, pWicBmp));
+	}
+
+	return resource;
+}
+
+void CD2D1Renderer::SetRenderTarget(rhandle renderTarget)
+{
+	ComponentLogFunc();
+
+	auto found = m_mRenderTargets.find(renderTarget);
+	if (found != m_mRenderTargets.end())
+	{
+		m_pRenderTarget = found->second;
+	}
+	else
+	{
+		Logger.Error(_T("Unable to set render target to resource at rhandle %016x - no such render target"), renderTarget);
+	}
+}
 
 void CD2D1Renderer::DrawGeometry( rhandle hGeometry, rhandle hBrush )
 {
@@ -298,10 +381,16 @@ void CD2D1Renderer::DrawFillGeometry( rhandle hGeometry, rhandle hBrush, float2 
 	m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 }
 
-void CD2D1Renderer::DrawTextString( wstr string, SRect rect )
+void CD2D1Renderer::DrawTextString(wstr string, SRect rect, rhandle hBrush)
 {
+	auto foundBrush = m_mBrushes.find(hBrush);
+	if (foundBrush == m_mBrushes.end())
+	{
+		Logger.Error(_T("Unable to draw text string - no such brush %016x", hBrush));
+		return;
+	}
 	D2D1_RECT_F d2d1Rect = D2D1::RectF(rect.x, rect.y, rect.x+rect.w, rect.y+rect.h);
-	m_pRenderTarget->DrawTextW(string, lstrlenW(string), m_pTextFormat, d2d1Rect, m_pBlackBrush);
+	m_pRenderTarget->DrawTextW(string, lstrlenW(string), m_pTextFormat, d2d1Rect, foundBrush->second);
 }
 
 void CD2D1Renderer::DrawBitmap(rhandle hBitmap, float2 pos, float2 scale)
@@ -382,43 +471,18 @@ bool CD2D1Renderer::CreateDeviceResources( )
 	HRESULT hr = S_OK;
 	if(!m_pRenderTarget)
 	{
-		// Create an HwndRenderTarget to draw to the hwnd.
-		RECT rc;
-		GetClientRect((HWND)m_hwnd, &rc);
-		D2D1_SIZE_U size = D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top);
-		hr = m_pDirect2dFactory->CreateHwndRenderTarget(
-			D2D1::RenderTargetProperties(),
-			D2D1::HwndRenderTargetProperties((HWND)m_hwnd, size),
-			&m_pHwndRenderTarget
-			);
-
-		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D render target"));
-
-		//m_pRenderTarget = m_pHwndRenderTarget;
-
-		hr = m_pWicFactory->CreateBitmap(m_width, m_height, GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnLoad, &m_pWicBitmap);
-		
-		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create WIC bitmap"));
-
-		auto rtprop = D2D1::RenderTargetProperties();
-		hr = m_pDirect2dFactory->CreateWicBitmapRenderTarget(m_pWicBitmap, &rtprop, &m_pBmpRenderTarget);
-
-		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2d WIC bitmap render target"));
-
-		m_pRenderTarget = m_pBmpRenderTarget;
-
 		D2D1_RECT_F rect = D2D1::RectF(0.0f,0.0f,50.0f,50.0f);
 		hr = m_pDirect2dFactory->CreateRectangleGeometry( rect, &m_pD2D1Rect );
 
 		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D rectangle geometry"));
 
-		hr = m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &m_pBlackBrush);
+		//hr = m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &m_pBlackBrush);
 
-		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D black brush"));
+		//CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D black brush"));
 
-		hr = m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::LightSteelBlue), &m_pMidGrayBrush);
+		//hr = m_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::LightSteelBlue), &m_pMidGrayBrush);
 
-		CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D light steel blue brush"));
+		//CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create Direct2D light steel blue brush"));
 	}
 
 	return true;

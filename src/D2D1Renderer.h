@@ -66,6 +66,10 @@ namespace tod
 		ID2D1HwndRenderTarget* m_pHwndRenderTarget;
 		ID2D1RenderTarget* m_pBmpRenderTarget;
 
+		std::map<rhandle, ID2D1RenderTarget*>  m_mRenderTargets;
+		std::map<rhandle, IWICBitmap*> m_mRenderTargetWicBmps;
+		uint32 m_uiNextRenderTargetID;
+
 		uint32 m_width;
 		uint32 m_height;
 
@@ -92,10 +96,14 @@ namespace tod
 		virtual rhandle CreateImage(uint16 width, uint16 height, uint8* data);
 		virtual void    UpdateImage(rhandle img, uint16 width, uint16 height, uint8* data);
 
+		virtual rhandle CreateRenderTarget(bool present = true);
+		virtual void	SetRenderTarget(rhandle renderTarget);
+		virtual rhandle CreateImageFromRenderTarget(rhandle hRenderTarget);
+
 		virtual void DrawGeometry( rhandle hGeometry, rhandle hBrush );
 		virtual void DrawFillGeometry( rhandle hGeometry, rhandle hBrush );
 		virtual void DrawFillGeometry( rhandle hGeometry, rhandle hBrush, float2 translation );
-		virtual void DrawTextString(wstr string, SRect rect);
+		virtual void DrawTextString(wstr string, SRect rect, rhandle hBrush);
 
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale );
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale, float opacity );
