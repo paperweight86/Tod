@@ -36,6 +36,8 @@ namespace tod
 		virtual bool Initialise( ptr hwnd, uint32 width, uint32 height ) = 0;
 		virtual void Deinitialise( ) = 0;
 
+		virtual void SetClearColor(SColour colour) = 0;
+
 		virtual void Update( uint32 dt ) = 0;
 		virtual void BeginDraw( ) = 0;
 		virtual void EndDraw( ) = 0;
@@ -63,6 +65,8 @@ namespace tod
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale, float opacity ) = 0;
 
 		virtual void DrawRectangle(rhandle hBrush, SRect rect, float2 offset = float2(0.0f, 0.0f), float2 scale = float2(1.0f, 1.0f), float stroke = 0.0f) = 0;
+
+		virtual bool SavePngImage(rhandle hRenderTarget) = 0;
 
 		virtual void DestroyResource(rhandle hResource) = 0;
 	};

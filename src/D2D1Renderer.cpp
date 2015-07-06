@@ -21,9 +21,12 @@ CD2D1Renderer::CD2D1Renderer( ) :
 	m_ui32NextGeometryID(0),
 	m_ui32NextBrushID(0),
 	m_uiNextBitmapId(0),
-	m_uiNextRenderTargetID(0)
+	m_uiNextRenderTargetID(0),
+	m_pBmpEncoder(nullptr),
+	m_pImageStream(nullptr)
 {
 	m_eType = e2DRenderer_Direct2D;
+	CreateColourFromRGB(m_clearColor, 0x00000000);
 }
 
 CD2D1Renderer::~CD2D1Renderer( )
@@ -82,12 +85,17 @@ void CD2D1Renderer::Update( uint32 dt )
 	}
 }
 
-void CD2D1Renderer::BeginDraw( )
+void CD2D1Renderer::SetClearColor(SColour colour)
+{
+	m_clearColor = colour;
+}
+
+void CD2D1Renderer::BeginDraw()
 {
 	//ComponentLogFunc( );
 	CreateDeviceResources();
 	m_pRenderTarget->BeginDraw();
-	m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
+	m_pRenderTarget->Clear(D2D1::ColorF(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a));
 	m_pRenderTarget->SetTransform( D2D1::Matrix3x2F::Identity() );
 }
 
@@ -260,14 +268,14 @@ rhandle CD2D1Renderer::CreateImageFromRenderTarget(rhandle hRenderTarget)
 	auto foundRt = m_mRenderTargets.find(hRenderTarget);
 	if (foundRt == m_mRenderTargets.end())
 	{
-		Logger.Log(_T("Unable to create image from render target - no such render target %016x", hRenderTarget));
+		Logger.Log(_T("Unable to create image from render target - no such render target 0x%016llx", hRenderTarget));
 		return nullrhandle;
 	}
 
 	auto foundWic = m_mRenderTargetWicBmps.find(hRenderTarget);
 	if (foundWic == m_mRenderTargetWicBmps.end())
 	{
-		Logger.Log(_T("Unable to create image from render target - render target %016x has no associated bitmap", hRenderTarget));
+		Logger.Log(_T("Unable to create image from render target - render target 0x%016llx has no associated bitmap", hRenderTarget));
 		return nullrhandle;
 	}
 
@@ -351,7 +359,7 @@ void CD2D1Renderer::SetRenderTarget(rhandle renderTarget)
 	}
 	else
 	{
-		Logger.Error(_T("Unable to set render target to resource at rhandle %016x - no such render target"), renderTarget);
+		Logger.Error(_T("Unable to set render target to resource at rhandle 0x%016llx - no such render target"), renderTarget);
 	}
 }
 
@@ -386,7 +394,7 @@ void CD2D1Renderer::DrawTextString(wstr string, SRect rect, rhandle hBrush)
 	auto foundBrush = m_mBrushes.find(hBrush);
 	if (foundBrush == m_mBrushes.end())
 	{
-		Logger.Error(_T("Unable to draw text string - no such brush %016x", hBrush));
+		Logger.Error(_T("Unable to draw text string - no such brush 0x%016llx", hBrush));
 		return;
 	}
 	D2D1_RECT_F d2d1Rect = D2D1::RectF(rect.x, rect.y, rect.x+rect.w, rect.y+rect.h);
@@ -418,6 +426,59 @@ void CD2D1Renderer::DrawRectangle(rhandle hBrush, SRect rect, float2 offset, flo
 	//D2D1_RECT_F d2dRect = D2D1::RectF(rect.x + offset.x, rect.y + offset.y, right, bottom);
 	D2D1_RECT_F d2dRect = D2D1::RectF(rect.x, rect.y, rect.x+rect.w, rect.y+rect.h);
 	m_pRenderTarget->FillRectangle(d2dRect, brushFound->second);
+}
+
+bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget)
+{
+	auto found = m_mRenderTargetWicBmps.find(hRenderTarget);
+	if (found == m_mRenderTargetWicBmps.end())
+	{
+		Logger.Error(_T("Unknown render target 0x%016llx"), hRenderTarget);
+		return false;
+	}
+	HRESULT hr = m_pWicFactory->CreateStream(&m_pImageStream);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create WIC Stream"));
+
+	const WCHAR filename[] = _T("C:\\output.png");
+	hr = m_pImageStream->InitializeFromFilename(filename, GENERIC_WRITE);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to initialise Wic image stream"));
+	
+	IWICBitmapEncoder* pBmpEncoder = nullptr;
+	hr = m_pWicFactory->CreateEncoder(GUID_ContainerFormatPng, NULL, &pBmpEncoder);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create encoder for png when saving png"));
+
+	hr = pBmpEncoder->Initialize(m_pImageStream, WICBitmapEncoderNoCache);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to initialise png encoder when saving png"));
+
+	IWICBitmapFrameEncode* pFrameEncoder = nullptr;
+	hr = pBmpEncoder->CreateNewFrame(&pFrameEncoder, NULL);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create new encoder frame when saving png"));
+
+	hr = pFrameEncoder->Initialize(NULL);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to initialise encoder frame when saving png"));
+
+	hr = pFrameEncoder->SetSize(m_width, m_height);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to initialise encoder frame size when saving png"));
+
+	auto pFmt = GUID_WICPixelFormat32bppPBGRA;
+	hr = pFrameEncoder->SetPixelFormat(&pFmt);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to pixed format of encoder frame size when saving png"));
+
+	hr = pFrameEncoder->WriteSource(found->second, NULL);
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to write encoder frame when saving png"));
+
+	hr = pFrameEncoder->Commit();
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to commit encoder frame when saving png"));
+
+	hr = pBmpEncoder->Commit();
+	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to commit bmp encoder frame when saving png"));
+
+	// Tidy up resources
+	pFrameEncoder->Release();
+	pBmpEncoder->Release();
+	m_pImageStream->Release();
+
+	return true;
 }
 
 // Private

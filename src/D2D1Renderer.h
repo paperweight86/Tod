@@ -20,6 +20,8 @@ struct IWICImagingFactory;
 struct IWICBitmap;
 struct ID2D1BitmapRenderTarget;
 struct ID2D1RenderTarget;
+struct IWICBitmapEncoder;
+struct IWICStream;
 
 namespace tod
 {
@@ -73,6 +75,11 @@ namespace tod
 		uint32 m_width;
 		uint32 m_height;
 
+		SColour m_clearColor;
+
+		IWICBitmapEncoder* m_pBmpEncoder;
+		IWICStream* m_pImageStream;
+
 	public:
 		CD2D1Renderer( );
 		~CD2D1Renderer( );
@@ -80,6 +87,8 @@ namespace tod
 		// IUIRenderer
 		virtual bool Initialise( ptr hwnd, uint32 width, uint32 height );
 		virtual void Deinitialise( );
+
+		virtual void SetClearColor(SColour colour);
 
 		virtual void Update( uint32 dt );
 		virtual void BeginDraw( );
@@ -109,6 +118,8 @@ namespace tod
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale, float opacity );
 
 		virtual void DrawRectangle( rhandle hBrush, SRect rect, float2 offset = float2(0.0f, 0.0f), float2 scale = float2(1.0f, 1.0f), float stroke = 0.0f );
+
+		virtual bool SavePngImage(rhandle hRenderTarget);
 
 		virtual void DestroyResource(rhandle hResource);
 	private:
