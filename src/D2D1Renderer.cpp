@@ -148,6 +148,7 @@ rhandle CD2D1Renderer::CreateFillGeometry( const float2* vertices, uint32 vertex
 		pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
 		hr = pSink->Close();
 		CHECK_HR_ONFAIL_LOG_RETURN_VAL( hr, _T("Failed to create Direct2D path geometry"), nullrhandle);
+		D2D_RELEASE(pSink);
 		handle = MAKE_RHANDLE( m_ui32NextGeometryID++, eResourceType_ShapeGeometry );
 		m_mGeometry.insert( std::make_pair(handle, pNewGeo) );
 	}
@@ -177,6 +178,7 @@ rhandle CD2D1Renderer::CreateGeometry( const float2* vertices, uint32 vertexCoun
 		}
 		pSink->EndFigure(D2D1_FIGURE_END_OPEN);
 		hr = pSink->Close();
+		D2D_RELEASE(pSink);
 		CHECK_HR_ONFAIL_LOG_RETURN_VAL( hr, _T("Failed to create Direct2D path geometry"), nullrhandle);
 		handle = MAKE_RHANDLE( m_ui32NextGeometryID++, eResourceType_PathGeometry );
 		m_mGeometry.insert( std::make_pair(handle, pNewGeo) );
@@ -303,6 +305,46 @@ void CD2D1Renderer::UpdateImage(rhandle img, uint16 width, uint16 height, uint8*
 		D2D_RECT_U bmRect = D2D1::RectU(0, 0, width, height);
 		CHECK_HR_ONFAIL_LOG(pBmp->CopyFromMemory(&bmRect, data, width * 4),
 							_T("Failed to initialise Direct2D bitmap image"));
+	}
+}
+
+void CD2D1Renderer::UpdateGeometry(rhandle geo, const float2* vertices, uint32 vertexCount)
+{
+	auto found = m_mGeometry.find(geo);
+	if (found == m_mGeometry.end())
+	{
+		ComponentLogFunc();
+		Logger.Error(_T("Unknown geometry 0x%016llx"), geo);
+		return;
+	}
+
+	// Direct2D geometry is fucking stupid and totally immuatable so time to delete and alloc up some new geometry
+	// cos thats fucking optimal...
+	D2D_RELEASE(found->second);
+
+	rhandle handle = found->first;
+	m_mGeometry.erase(found);
+
+	ID2D1PathGeometry* pNewGeo = nullptr;
+
+	HRESULT hr = m_pDirect2dFactory->CreatePathGeometry(&pNewGeo);
+	CHECK_HR_ONFAIL_LOG(hr, _T("Failed to create Direct2D path geometry"));
+	if (SUCCEEDED(hr))
+	{
+		ID2D1GeometrySink *pSink = NULL;
+		hr = pNewGeo->Open(&pSink);
+		CHECK_HR_ONFAIL_LOG_RETURN_VOID(hr, _T("Failed to create Direct2D path geometry"), nullrhandle);
+		pSink->SetFillMode(D2D1_FILL_MODE_WINDING);
+		pSink->BeginFigure(D2D1::Point2F(vertices[0].x, vertices[0].y), D2D1_FIGURE_BEGIN_FILLED);
+		for (uint32 i = 0; i < vertexCount; ++i)
+		{
+			pSink->AddLine(D2D1::Point2F(vertices[i].x, vertices[i].y));
+		}
+		pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		hr = pSink->Close();
+		CHECK_HR_ONFAIL_LOG_RETURN_VOID(hr, _T("Failed to create Direct2D path geometry"), nullrhandle);
+		D2D_RELEASE(pSink);
+		m_mGeometry.insert(std::make_pair(handle, pNewGeo));
 	}
 }
 
@@ -580,6 +622,7 @@ void CD2D1Renderer::DestroyResource(rhandle hResource)
 		auto geoFind = m_mGeometry.find(hResource);
 		D2D_RELEASE(geoFind->second);
 		m_mGeometry.erase(geoFind);
+		m_pRenderTarget->Flush();
 		break;
 	}
 	case eResourceType_SolidBrush:

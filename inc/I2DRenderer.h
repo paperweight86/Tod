@@ -51,7 +51,9 @@ namespace tod
 
 		virtual rhandle CreateImage( uint16 width, uint16 height, uint8* data ) = 0;
 		virtual rhandle CreateImageFromRenderTarget(rhandle hRenderTarget) = 0;
+
 		virtual void    UpdateImage( rhandle img, uint16 width, uint16 height, uint8* data ) = 0;
+		virtual void	UpdateGeometry(rhandle geo, const float2* vertices, uint32 vertexCount) = 0;
 
 		virtual rhandle CreateRenderTarget(bool present = true) = 0;
 		virtual void	SetRenderTarget(rhandle renderTarget) = 0;

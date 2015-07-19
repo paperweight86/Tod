@@ -103,7 +103,9 @@ namespace tod
 		virtual rhandle CreateBrushCached(const SColour& colour);
 		
 		virtual rhandle CreateImage(uint16 width, uint16 height, uint8* data);
+
 		virtual void    UpdateImage(rhandle img, uint16 width, uint16 height, uint8* data);
+		virtual void	UpdateGeometry(rhandle geo, const float2* vertices, uint32 vertexCount);
 
 		virtual rhandle CreateRenderTarget(bool present = true);
 		virtual void	SetRenderTarget(rhandle renderTarget);
