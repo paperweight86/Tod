@@ -270,14 +270,14 @@ rhandle CD2D1Renderer::CreateImageFromRenderTarget(rhandle hRenderTarget)
 	auto foundRt = m_mRenderTargets.find(hRenderTarget);
 	if (foundRt == m_mRenderTargets.end())
 	{
-		Logger.Log(_T("Unable to create image from render target - no such render target 0x%016llx", hRenderTarget));
+		Logger.Log(_T("Unable to create image from render target - no such render target 0x%016llx"), hRenderTarget);
 		return nullrhandle;
 	}
 
 	auto foundWic = m_mRenderTargetWicBmps.find(hRenderTarget);
 	if (foundWic == m_mRenderTargetWicBmps.end())
 	{
-		Logger.Log(_T("Unable to create image from render target - render target 0x%016llx has no associated bitmap", hRenderTarget));
+		Logger.Log(_T("Unable to create image from render target - render target 0x%016llx has no associated bitmap"), hRenderTarget);
 		return nullrhandle;
 	}
 
@@ -436,7 +436,7 @@ void CD2D1Renderer::DrawTextString(wstr string, SRect rect, rhandle hBrush)
 	auto foundBrush = m_mBrushes.find(hBrush);
 	if (foundBrush == m_mBrushes.end())
 	{
-		Logger.Error(_T("Unable to draw text string - no such brush 0x%016llx", hBrush));
+		Logger.Error(_T("Unable to draw text string - no such brush 0x%016llx"), hBrush);
 		return;
 	}
 	D2D1_RECT_F d2d1Rect = D2D1::RectF(rect.x, rect.y, rect.x+rect.w, rect.y+rect.h);
