@@ -36,6 +36,9 @@
   <ItemGroup>
     <None Include="README.md" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="License.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0C936E33-BC5C-42CA-80B0-E5280E2C1967}</ProjectGuid>
     <RootNamespace>Tod</RootNamespace>

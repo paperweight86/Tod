@@ -1,3 +1,4 @@
 # Tod
 # 2D Rendering Library
-Wraps Direct2D calls at the moment intended to allow OpenGL implementation later for linux et but might be a separate library we'll see...
+
+Currently thinly wraps Direct2D calls but intended to allow OpenGL/Direct3D implementation later if it gets more useful
