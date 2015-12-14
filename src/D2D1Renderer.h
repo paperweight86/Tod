@@ -112,8 +112,12 @@ namespace tod
 		virtual rhandle CreateImageFromRenderTarget(rhandle hRenderTarget);
 
 		virtual void DrawGeometry( rhandle hGeometry, rhandle hBrush );
+		virtual void DrawGeometry(rhandle hGeometry, rhandle hBrush, float2 translation);
 		virtual void DrawFillGeometry( rhandle hGeometry, rhandle hBrush );
 		virtual void DrawFillGeometry( rhandle hGeometry, rhandle hBrush, float2 translation );
+		virtual void DrawFillGeometry(rhandle hGeometry, rhandle hBrush, float2 translation, float2 scale);
+		virtual void DrawFillGeometry(rhandle hGeometry, rhandle hBrush, float2 translation, float2 scale, float rotAngle,
+								  	  float2 rotCenter = float2(0.0f, 0.0f));
 		virtual void DrawTextString(wstr string, SRect rect, rhandle hBrush);
 
 		virtual void DrawBitmap( rhandle hBitmap, float2 pos, float2 scale );
@@ -121,7 +125,7 @@ namespace tod
 
 		virtual void DrawRectangle( rhandle hBrush, SRect rect, float2 offset = float2(0.0f, 0.0f), float2 scale = float2(1.0f, 1.0f), float stroke = 0.0f );
 
-		virtual bool SavePngImage(rhandle hRenderTarget);
+		virtual bool SavePngImage(rhandle hRenderTarget, tstr path);
 
 		virtual void DestroyResource(rhandle hResource);
 	private:

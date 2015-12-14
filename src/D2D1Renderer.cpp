@@ -394,6 +394,12 @@ void CD2D1Renderer::SetRenderTarget(rhandle renderTarget)
 {
 	ComponentLogFunc();
 
+	if (renderTarget == nullrhandle)
+	{
+		m_pRenderTarget = nullptr;
+		return;
+	}
+
 	auto found = m_mRenderTargets.find(renderTarget);
 	if (found != m_mRenderTargets.end())
 	{
@@ -406,6 +412,15 @@ void CD2D1Renderer::SetRenderTarget(rhandle renderTarget)
 }
 
 void CD2D1Renderer::DrawGeometry( rhandle hGeometry, rhandle hBrush )
+{
+	auto geoIterFound = m_mGeometry.find( hGeometry );
+	auto bruIterFound = m_mBrushes.find( hBrush );
+	assert( geoIterFound != m_mGeometry.end() );
+	assert( bruIterFound != m_mBrushes.end() );
+	m_pRenderTarget->DrawGeometry( (*geoIterFound).second, (*bruIterFound).second );
+}
+
+void CD2D1Renderer::DrawGeometry(rhandle hGeometry, rhandle hBrush, float2 translation)
 {
 	auto geoIterFound = m_mGeometry.find( hGeometry );
 	auto bruIterFound = m_mBrushes.find( hBrush );
@@ -430,6 +445,26 @@ void CD2D1Renderer::DrawFillGeometry( rhandle hGeometry, rhandle hBrush, float2 
 	DrawFillGeometry( hGeometry, hBrush );
 	m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 }
+
+void CD2D1Renderer::DrawFillGeometry(rhandle hGeometry, rhandle hBrush, float2 translation, float2 scale)
+{
+	D2D1::Matrix3x2F trans = D2D1::Matrix3x2F::Translation(translation.x, translation.y);
+	D2D1::Matrix3x2F scaleMat = D2D1::Matrix3x2F::Scale(scale.x, scale.y);
+	m_pRenderTarget->SetTransform(scaleMat * trans);
+	DrawFillGeometry(hGeometry, hBrush);
+	m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+}
+
+void CD2D1Renderer::DrawFillGeometry(rhandle hGeometry, rhandle hBrush, float2 translation, float2 scale, float rotAngle, float2 rotCenter)
+{
+	D2D1::Matrix3x2F trans = D2D1::Matrix3x2F::Translation(translation.x, translation.y);
+	D2D1::Matrix3x2F scaleMat = D2D1::Matrix3x2F::Scale(scale.x, scale.y);
+	D2D1::Matrix3x2F rot = D2D1::Matrix3x2F::Rotation(rotAngle, D2D1::Point2F(rotCenter.x, rotCenter.y));
+	m_pRenderTarget->SetTransform(scaleMat * rot * trans);
+	DrawFillGeometry(hGeometry, hBrush);
+	m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+}
+
 
 void CD2D1Renderer::DrawTextString(wstr string, SRect rect, rhandle hBrush)
 {
@@ -470,7 +505,7 @@ void CD2D1Renderer::DrawRectangle(rhandle hBrush, SRect rect, float2 offset, flo
 	m_pRenderTarget->FillRectangle(d2dRect, brushFound->second);
 }
 
-bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget)
+bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget, tstr path)
 {
 	auto found = m_mRenderTargetWicBmps.find(hRenderTarget);
 	if (found == m_mRenderTargetWicBmps.end())
@@ -481,8 +516,7 @@ bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget)
 	HRESULT hr = m_pWicFactory->CreateStream(&m_pImageStream);
 	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create WIC Stream"));
 
-	const WCHAR filename[] = _T("C:\\output.png");
-	hr = m_pImageStream->InitializeFromFilename(filename, GENERIC_WRITE);
+	hr = m_pImageStream->InitializeFromFilename(path, GENERIC_WRITE);
 	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to initialise Wic image stream"));
 	
 	IWICBitmapEncoder* pBmpEncoder = nullptr;
@@ -605,8 +639,13 @@ void CD2D1Renderer::DestroyDeviceResources()
 	D2D_RELEASE(m_pTextFormat);
 	D2D_RELEASE(m_pDWriteFactory);
 
-	D2D_RELEASE(m_pRenderTarget);
 	D2D_RELEASE(m_pDirect2dFactory);
+
+	D2D_RELEASE_ALL_MAP(m_mRenderTargets);
+	D2D_RELEASE_ALL_MAP(m_mRenderTargetWicBmps);
+
+	if(m_pWicFactory != nullptr)
+		m_pWicFactory->Release();
 }
 
 void CD2D1Renderer::DestroyResource(rhandle hResource)
@@ -650,6 +689,13 @@ void CD2D1Renderer::DestroyResource(rhandle hResource)
 		auto bmpFind = m_mBitmaps.find(hResource);
 		bmpFind->second->Release();
 		m_mBitmaps.erase(bmpFind);
+		break;
+	}
+	case eResourceType_RenderTarget:
+	{
+		auto rtFind = m_mRenderTargets.find( hResource );
+		D2D_RELEASE(rtFind->second);
+		m_mRenderTargets.erase(rtFind);
 		break;
 	}
 	default:
