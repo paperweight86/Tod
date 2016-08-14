@@ -475,7 +475,7 @@ void CD2D1Renderer::DrawTextString(wstr string, SRect rect, rhandle hBrush)
 		return;
 	}
 	D2D1_RECT_F d2d1Rect = D2D1::RectF(rect.x, rect.y, rect.x+rect.w, rect.y+rect.h);
-	m_pRenderTarget->DrawTextW(string, lstrlenW(string), m_pTextFormat, d2d1Rect, foundBrush->second);
+	m_pRenderTarget->DrawText(string, lstrlenW(string), m_pTextFormat, d2d1Rect, foundBrush->second);
 }
 
 void CD2D1Renderer::DrawBitmap(rhandle hBitmap, float2 pos, float2 scale)
@@ -505,7 +505,7 @@ void CD2D1Renderer::DrawRectangle(rhandle hBrush, SRect rect, float2 offset, flo
 	m_pRenderTarget->FillRectangle(d2dRect, brushFound->second);
 }
 
-bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget, tstr path)
+bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget, wstr path)
 {
 	auto found = m_mRenderTargetWicBmps.find(hRenderTarget);
 	if (found == m_mRenderTargetWicBmps.end())
@@ -515,6 +515,8 @@ bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget, tstr path)
 	}
 	HRESULT hr = m_pWicFactory->CreateStream(&m_pImageStream);
 	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to create WIC Stream"));
+
+
 
 	hr = m_pImageStream->InitializeFromFilename(path, GENERIC_WRITE);
 	CHECK_HR_ONFAIL_LOG_RETURN(hr, _T("Failed to initialise Wic image stream"));

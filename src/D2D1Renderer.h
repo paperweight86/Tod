@@ -125,7 +125,7 @@ namespace tod
 
 		virtual void DrawRectangle( rhandle hBrush, SRect rect, float2 offset = float2(0.0f, 0.0f), float2 scale = float2(1.0f, 1.0f), float stroke = 0.0f );
 
-		virtual bool SavePngImage(rhandle hRenderTarget, tstr path);
+		virtual bool SavePngImage(rhandle hRenderTarget, wstr path);
 
 		virtual void DestroyResource(rhandle hResource);
 	private:
