@@ -37,8 +37,6 @@ CD2D1Renderer::~CD2D1Renderer( )
 // IUIRenderer
 bool CD2D1Renderer::Initialise( ptr hwnd, uint32 width, uint32 height )
 {
-	ComponentLogFunc( );
-
 	m_hwnd = hwnd;
 
 	m_width = width;
@@ -46,13 +44,13 @@ bool CD2D1Renderer::Initialise( ptr hwnd, uint32 width, uint32 height )
 
 	if( !CreateDeviceIndependentResources() )
 	{
-		Logger.Error(_T("Initialisation failed"));
+		log::err_out("Initialisation failed");
 		return false;
 	}
 
 	if( !CreateDeviceResources() )
 	{
-		Logger.Error(_T("Initialisation failed"));
+		log::err_out("Initialisation failed");
 		return false;
 	}
 
@@ -61,13 +59,10 @@ bool CD2D1Renderer::Initialise( ptr hwnd, uint32 width, uint32 height )
 
 void CD2D1Renderer::Deinitialise( )
 {
-	ComponentLogFunc( );
-
 }
 
 void CD2D1Renderer::Update( uint32 dt )
 {
-	ComponentLogFunc( );
 	CreateDeviceResources();
 	m_pRenderTarget->BeginDraw();
 	m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
@@ -101,14 +96,12 @@ void CD2D1Renderer::BeginDraw()
 
 void CD2D1Renderer::EndDraw()
 {
-	ComponentLogFunc();
 	HRESULT hr = m_pRenderTarget->EndDraw();
 	CHECK_HR_ONFAIL_LOG(hr, _T("Failed to draw correctly"));
 }
 
 rhandle CD2D1Renderer::CreateRectangleGeometry( SRect rect )
 {
-	ComponentLogFunc( );
 	rhandle handle = nullrhandle;
 	
 	ID2D1RectangleGeometry* pNewRect = nullptr;
@@ -127,7 +120,6 @@ rhandle CD2D1Renderer::CreateRectangleGeometry( SRect rect )
 
 rhandle CD2D1Renderer::CreateFillGeometry( const float2* vertices, uint32 vertexCount, SRect* rect )
 {
-	ComponentLogFunc( );
 	rhandle handle = nullrhandle;
 
 	ID2D1PathGeometry* pNewGeo = nullptr;
@@ -158,7 +150,6 @@ rhandle CD2D1Renderer::CreateFillGeometry( const float2* vertices, uint32 vertex
 
 rhandle CD2D1Renderer::CreateGeometry( const float2* vertices, uint32 vertexCount, SRect* rect )
 {
-	ComponentLogFunc( );
 	rhandle handle = nullrhandle;
 
 	ID2D1PathGeometry* pNewGeo = nullptr;
@@ -189,7 +180,6 @@ rhandle CD2D1Renderer::CreateGeometry( const float2* vertices, uint32 vertexCoun
 
 rhandle CD2D1Renderer::CreateEllipseGeometry( const float2& pos, const float2& size )
 {
-	ComponentLogFunc( );
 	rhandle handle = nullrhandle;
 	
 	ID2D1EllipseGeometry* pNewRect = nullptr;
@@ -211,14 +201,13 @@ rhandle CD2D1Renderer::CreateBrush( const SColour& colour )
 
 rhandle CD2D1Renderer::CreateBrushCached(const SColour& colour)
 {
-	ComponentLogFunc();
 	auto brushFindResult = m_mBrushCache.find(colour);
 	if (brushFindResult != m_mBrushCache.end())
 	{
 		return brushFindResult->second;
 	}
 	
-	Logger.Warning(_T("Brush cache miss for R %f G %f B %f A %f"), colour.r, colour.g, colour.b, colour.a);
+	log::wrn_out("Brush cache miss for R %f G %f B %f A %f", colour.r, colour.g, colour.b, colour.a);
 
 	rhandle handle = nullrhandle;
 	ID2D1SolidColorBrush* pBrush = nullptr;
@@ -236,7 +225,6 @@ rhandle CD2D1Renderer::CreateBrushCached(const SColour& colour)
 
 rhandle CD2D1Renderer::CreateImage(uint16 width, uint16 height, uint8* data)
 {
-	ComponentLogFunc();
 	rhandle handle = nullrhandle;
 
 	D2D_SIZE_U bmSize = D2D1::SizeU(width, height);
@@ -270,14 +258,14 @@ rhandle CD2D1Renderer::CreateImageFromRenderTarget(rhandle hRenderTarget)
 	auto foundRt = m_mRenderTargets.find(hRenderTarget);
 	if (foundRt == m_mRenderTargets.end())
 	{
-		Logger.Log(_T("Unable to create image from render target - no such render target 0x%016llx"), hRenderTarget);
+		log::err_out("Unable to create image from render target - no such render target 0x%016llx", hRenderTarget);
 		return nullrhandle;
 	}
 
 	auto foundWic = m_mRenderTargetWicBmps.find(hRenderTarget);
 	if (foundWic == m_mRenderTargetWicBmps.end())
 	{
-		Logger.Log(_T("Unable to create image from render target - render target 0x%016llx has no associated bitmap"), hRenderTarget);
+		log::err_out(_T("Unable to create image from render target - render target 0x%016llx has no associated bitmap"), hRenderTarget);
 		return nullrhandle;
 	}
 
@@ -313,8 +301,7 @@ void CD2D1Renderer::UpdateGeometry(rhandle geo, const float2* vertices, uint32 v
 	auto found = m_mGeometry.find(geo);
 	if (found == m_mGeometry.end())
 	{
-		ComponentLogFunc();
-		Logger.Error(_T("Unknown geometry 0x%016llx"), geo);
+		log::err_out(_T("Unknown geometry 0x%016llx"), geo);
 		return;
 	}
 
@@ -350,7 +337,6 @@ void CD2D1Renderer::UpdateGeometry(rhandle geo, const float2* vertices, uint32 v
 
 rhandle CD2D1Renderer::CreateRenderTarget(bool present)
 {
-	ComponentLogFunc();
 	rhandle resource = nullrhandle;
 	HRESULT hr = 0;
 	resource = MAKE_RHANDLE(m_uiNextRenderTargetID++, eResourceType_RenderTarget);
@@ -392,8 +378,6 @@ rhandle CD2D1Renderer::CreateRenderTarget(bool present)
 
 void CD2D1Renderer::SetRenderTarget(rhandle renderTarget)
 {
-	ComponentLogFunc();
-
 	if (renderTarget == nullrhandle)
 	{
 		m_pRenderTarget = nullptr;
@@ -407,7 +391,7 @@ void CD2D1Renderer::SetRenderTarget(rhandle renderTarget)
 	}
 	else
 	{
-		Logger.Error(_T("Unable to set render target to resource at rhandle 0x%016llx - no such render target"), renderTarget);
+		log::err_out("Unable to set render target to resource at rhandle 0x%016llx - no such render target", renderTarget);
 	}
 }
 
@@ -471,7 +455,7 @@ void CD2D1Renderer::DrawTextString(wstr string, SRect rect, rhandle hBrush)
 	auto foundBrush = m_mBrushes.find(hBrush);
 	if (foundBrush == m_mBrushes.end())
 	{
-		Logger.Error(_T("Unable to draw text string - no such brush 0x%016llx"), hBrush);
+		log::err_out("Unable to draw text string - no such brush 0x%016llx", hBrush);
 		return;
 	}
 	D2D1_RECT_F d2d1Rect = D2D1::RectF(rect.x, rect.y, rect.x+rect.w, rect.y+rect.h);
@@ -510,7 +494,7 @@ bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget, wstr path)
 	auto found = m_mRenderTargetWicBmps.find(hRenderTarget);
 	if (found == m_mRenderTargetWicBmps.end())
 	{
-		Logger.Error(_T("Unknown render target 0x%016llx"), hRenderTarget);
+		log::err_out("Unknown render target 0x%016llx", hRenderTarget);
 		return false;
 	}
 	HRESULT hr = m_pWicFactory->CreateStream(&m_pImageStream);
@@ -562,8 +546,6 @@ bool CD2D1Renderer::SavePngImage(rhandle hRenderTarget, wstr path)
 // Private
 bool CD2D1Renderer::CreateDeviceIndependentResources()
 {
-	ComponentLogFunc( );
-
 	HRESULT hr = S_OK;
 
 	// Create Direct2D factory.
@@ -605,8 +587,6 @@ bool CD2D1Renderer::CreateDeviceIndependentResources()
 
 bool CD2D1Renderer::CreateDeviceResources( )
 {
-	ComponentLogFunc( );
-
 	HRESULT hr = S_OK;
 	if(!m_pRenderTarget)
 	{

@@ -5,6 +5,9 @@
 #include <assert.h>
 
 #include "types.h"
-#include "ScopedLog.h"
+
+#include "tat.h"
+
+#include "log.h"
 
 using namespace uti;
